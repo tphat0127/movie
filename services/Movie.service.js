@@ -1,10 +1,12 @@
 const { Schema } = require("mongoose");
 const { Movie } = require("../models/ListMovie.modal");
+const { Theatre } = require("../models/MovieTheatre.modal");
 const moment = require("moment");
 const PAGE_SIZE = 2;
 // hiển thị phim
 module.exports.getMovie = (req, res, next) => {
   return Movie.find()
+    .populate("lstLichChieuTheoPhim")
     .then((movies) => {
       return res.status(200).json(movies);
     })
@@ -16,6 +18,7 @@ module.exports.getMovie = (req, res, next) => {
 // thêm phim
 module.exports.createMovie = (req, res, next) => {
   const {
+    theatreId, //_id of MovieTheatre
     tenPhim,
     lstLichChieuTheoPhim,
     biDanh,
@@ -26,22 +29,29 @@ module.exports.createMovie = (req, res, next) => {
     danhGia,
   } = req.body;
 
-  return Movie.create({
+  const newMovie = new Movie({
     tenPhim,
+    lstLichChieuTheoPhim,
     biDanh,
     trailer,
     hinhAnh,
     moTa,
     ngayKhoiChieu,
     danhGia,
-    lstLichChieuTheoPhim
-  })
-    .then((movie) => {
-      return res.status(200).json(movie);
+  });
+  Theatre.findById(theatreId)
+    .then((theatre) => {
+      if (!theatre)
+        return Promise.reject({
+          status: 404,
+          message: "Theatre not found",
+        });
+        theatre.danhSachPhim.push(newMovie);
+
+      return Promise.all([newMovie.save(), theatre.save()]);
     })
-    .catch((err) => {
-      return res.status(500).json(err);
-    });
+    .then((result) => res.status(200).json(result[0]))
+    .catch((err) => res.status(500).json(err));
 };
 
 // pagination movie

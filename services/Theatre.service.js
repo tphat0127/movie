@@ -1,5 +1,6 @@
 const { Schema } = require("mongoose");
 const { Theatre } = require("../models/MovieTheatre.modal");
+const { ScheduleListInfor } = require("../models/ListSchedule.modal");
 const { CinemaList } = require("../models/Cinema.modal");
 const TheatreCodeArray = [
   "Rạp 1",
@@ -15,31 +16,42 @@ const TheatreCodeArray = [
 ];
 
 module.exports.createTheatre = (req, res, next) => {
-  const { maHeThongRap, danhSachPhim, tenCumRap, DiaChi } = req.body;
+  const { scheduleListInfoId, maHeThongRap, tenCumRap, DiaChi } = req.body;
   const DanhSachRap = TheatreCodeArray.map((tenRap) => {
     return new CinemaList({ tenRap });
   });
-  return Theatre.create({
+  const newTheatre = new Theatre({
     maHeThongRap: maHeThongRap,
-    danhSachPhim: danhSachPhim, //cai danhSachPhim nay o trong model Theare roi, nen khoi them vo cung dc
-    tenCumRap: tenCumRap, //voi lay ong muon ket qua tra ve nhu the nao, mo cai demo xem thu
+    tenCumRap: tenCumRap,
     DiaChi: DiaChi,
     DanhSachRap: DanhSachRap,
-  })
-    .then((theatre) => {
-      console.log("theatre", theatre);
-      res.status(200).json(theatre);
+  });
+  ScheduleListInfor.findById(scheduleListInfoId)
+    .then((s) => {
+      if (!s)
+        return Promise.reject({
+          status: 404,
+          message: "ScheduleListInfo not found",
+        });
+      s.listCumRap.push(newTheatre);
+
+      return Promise.all([newTheatre.save(), s.save()]);
     })
-    .catch((err) => {
-      res.status(500).json(err);
-    });
+    .then((result) => res.status(200).json(result[0]))
+    .catch((err) => res.status(500).json(err));
 };
 
 module.exports.getTheatre = (req, res, next) => {
   const maHeThongRap = req.query.maHeThongRap;
   console.log("maHeThongRap", maHeThongRap);
   Theatre.find({ maHeThongRap })
-    .select({ maHeThongRap: 1, tenCumRap: 1, DiaChi: 1, DanhSachRap: 1 })
+    .select({
+      maHeThongRap: 1,
+      tenCumRap: 1,
+      DiaChi: 1,
+      DanhSachRap: 1,
+      danhSachPhim: 1,
+    })
     .then((theatre) => {
       if (!theatre) {
         return Promise.reject({

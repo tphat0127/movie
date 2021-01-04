@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
 const ListScheduleSchema = mongoose.Schema({
-  //maPhim: { type: mongoose.Schema.Types.ObjectId, ref: "Movie" }, //cai maphim nay 
   ngayChieuGioChieu: { type: Date, required: true },
-  maRap: { type: mongoose.Schema.Types.ObjectId, ref: "Theatre" },
+  maRap: { type: String, required: true },
   giaVe: { type: Number, required: true },
 });
 

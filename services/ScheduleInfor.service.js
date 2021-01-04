@@ -4,22 +4,18 @@ const { Theatre } = require("../models/MovieTheatre.modal");
 
 module.exports.createScheduleInfor = (req, res, next) => {
   const {
-    listCumRap,
-    //danhSachPhim,
     maHeThongRap,
     tenHeThongRap,
     logo,
   } = req.body;
   return ScheduleListInfor.create({
-    listCumRap,
-    // danhSachPhim,
     maHeThongRap,
     tenHeThongRap,
     logo,
   })
-    .then((scheduleListInfor) => {
-      console.log(scheduleListInfor);
-      return res.status(200).json(scheduleListInfor);
+    .then((scheduleListInfo) => {
+      console.log(scheduleListInfo);
+      return res.status(200).json(scheduleListInfo);
     })
     .catch((err) => {
       return res.status(500).json(err);
@@ -34,10 +30,12 @@ module.exports.getScheduleInfor = (req, res, next) => {
       .select({ maHeThongRap: 1, danhSachPhim: 1, tenHeThongRap: 1, logo: 1 })
       .populate({
         path: "listCumRap",
-        select: "_id tenCumRap DiaChi danhSachPhim ",
+        //select: "_id tenCumRap DiaChi danhSachPhim ",
         populate: {
           path: "danhSachPhim",
-          populate: "lstLichChieuTheoPhim",
+          populate: {
+            path: "lstLichChieuTheoPhim"
+          },
         },
       })
       .then((schedules) => {
